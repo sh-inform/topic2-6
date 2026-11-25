@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Файли, хмара і доступ — 6 клас</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: дружній урок для 6 класу — коротко, весело, ясно
+   IDEA: шкільний зошит у клітинку, по якому біжать заєць або черепаха до фінішу уроку
+   PICTURE: хмара з папками й замком; далі — живий провідник файлів і вікно «Надати доступ»
+   COLOUR and TYPE: білий папір у блакитну клітинку, синій #2f7cf6, жовтий для фінішу; Nunito
+   LAYOUT: липка бігова доріжка з прогресом і таймером 30 хв, далі блоки згори вниз */
+:root{--bg:#fff;--grid:#dbe9fb;--ink:#17325e;--mute:#4f6488;--blue:#2f7cf6;--blue-d:#1a5fd1;--soft:#eaf3ff;--line:#cfe0f7;--yel:#ffd34d;--ok:#11834f;--okbg:#e4f6ec;--bad:#c8323e;--badbg:#fdebed}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{margin:0;background:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:26px 26px;color:var(--ink);font:17px/1.55 Nunito,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-weight:900;line-height:1.12;margin:0;text-wrap:balance}
+h2{font-size:clamp(26px,3.6vw,36px)}h3{font-size:20px}
+p{margin:.4em 0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 max(4vw,16px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:800 16px Nunito,system-ui,sans-serif;min-height:48px;padding:10px 20px;border-radius:24px;border:2px solid var(--blue);background:#fff;color:var(--blue-d);cursor:pointer;text-decoration:none;transition:transform .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px)}
+.btn.pri{background:var(--blue);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* race track */
+.race{position:sticky;top:0;z-index:30;background:#ffffffee;backdrop-filter:blur(6px);border-bottom:2px solid var(--line)}
+.race .wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 18px;align-items:center;padding-top:8px;padding-bottom:8px}
+.track{position:relative;height:58px;border-radius:30px;background:#e9f2ff;border:2px dashed #a9c8f2;margin-right:34px}
+.track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:30px;background:linear-gradient(90deg,#cfe3ff,#9cc6ff);width:0;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.runner{position:absolute;bottom:2px;width:62px;height:48px;left:0;transform:translateX(-10%);transition:left .8s cubic-bezier(.2,.8,.2,1)}
+.runner svg{width:100%;height:100%;display:block}
+.runner.hop svg{animation:hop .5s ease-in-out 3}
+@keyframes hop{50%{transform:translateY(-12px) rotate(-6deg)}}
+.flag{position:absolute;right:-34px;bottom:4px;width:36px;height:50px}
+.rinfo{font-weight:800;font-size:15px;text-align:right;line-height:1.3;white-space:nowrap}
+.rinfo span{display:block;color:var(--mute);font-size:13px}
+@media(max-width:560px){.race .wrap{grid-template-columns:1fr}.rinfo{text-align:left;display:flex;gap:12px}.rinfo span{display:inline}}
+
+/* hero */
+.hero{padding:clamp(24px,4vw,50px) 0 10px}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:24px;align-items:center}
+@media(max-width:760px){.hero .wrap{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(32px,5vw,52px);color:var(--ink)}
+.hero h1 b{color:var(--blue)}
+.tag{display:inline-block;background:var(--yel);font-weight:900;padding:3px 12px;border-radius:12px;margin-bottom:12px}
+.plan{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.plan span{background:#fff;border:2px solid var(--line);border-radius:14px;padding:5px 12px;font-weight:800;font-size:15px}
+.hero-art{width:100%;height:auto;max-width:460px;justify-self:center}
+.pick{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.pick button{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid var(--line);border-radius:18px;padding:8px 16px 8px 8px;cursor:pointer;font-weight:900;font-size:17px;min-height:64px;transition:transform .15s,border-color .15s}
+.pick button svg{width:70px;height:52px}
+.pick button small{display:block;font-weight:700;font-size:13px;color:var(--mute)}
+.pick button[aria-pressed=true]{border-color:var(--blue);background:var(--soft)}
+.pick button:hover{transform:translateY(-2px)}
+
+/* sections */
+section.blk{padding:30px 0}
+.shead{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:16px}
+.num{width:44px;height:44px;border-radius:14px;background:var(--blue);color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px;flex:none}
+.time{font-weight:800;font-size:14px;background:var(--yel);border-radius:10px;padding:2px 10px}
+.shead p{flex-basis:100%;color:var(--mute);margin:0}
+.card{background:#fff;border:2px solid var(--line);border-radius:22px;padding:clamp(16px,2.6vw,26px);box-shadow:0 4px 0 var(--line);margin-bottom:22px}
+.th{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.pts{flex:none;font-weight:900;font-size:14px;background:var(--soft);color:var(--blue-d);border-radius:12px;padding:4px 12px;white-space:nowrap}
+.pts.done{background:var(--okbg);color:var(--ok)}
+.lead{color:var(--mute);margin:0 0 14px}
+.lead b{color:var(--ink)}
+.act{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+.hint{font-size:14px;color:var(--mute)}
+.good,.bad{border-radius:14px;padding:10px 14px;margin-top:10px}
+.good{background:var(--okbg);color:var(--ok)}.bad{background:var(--badbg);color:var(--bad)}
+.good ul,.bad ul{margin:6px 0 0;padding-left:20px;color:var(--ink)}
+.donep{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--okbg);color:var(--ok);border-radius:14px;padding:12px 16px;font-weight:800}
+.pop{animation:pop .35s}@keyframes pop{50%{transform:scale(1.07)}}
+.shake{animation:shake .4s}@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* flip cards */
+.flips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.fc{all:unset;cursor:pointer;perspective:900px;height:220px;display:block;border-radius:18px}
+.fc:focus-visible{outline:3px solid var(--yel);outline-offset:3px}
+.fi{position:relative;display:block;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.fc.on .fi{transform:rotateY(180deg)}
+.ff,.fb{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ff{background:#fff;border:3px solid var(--line)}
+.ff svg{width:84px;height:84px;margin-bottom:8px}
+.ff b{font-size:18px;font-weight:900}
+.ff small{font-size:12px;color:var(--mute);font-weight:700;margin-top:4px}
+.fb{background:var(--blue);color:#fff;transform:rotateY(180deg);font-size:15px;line-height:1.45;font-weight:700}
+.fb b{color:var(--yel)}
+.grp{font-weight:900;color:var(--blue-d);margin:18px 0 8px;font-size:17px}
+.grp:first-child{margin-top:0}
+
+/* sort */
+.pool{display:flex;flex-wrap:wrap;gap:8px;min-height:64px;padding:12px;border:2px dashed #a9c8f2;border-radius:16px;margin-bottom:12px;background:#f7fbff}
+.pool:empty::after{content:"Усі картки розкладено — натисни «Перевірити»";color:var(--mute);font-weight:800;font-size:14px;align-self:center}
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.bucket{border:2px solid var(--line);border-radius:16px;background:#fff;display:flex;flex-direction:column;min-height:130px}
+.bucket.over,.pool.over{border-color:var(--blue);background:var(--soft)}
+.bh{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;padding:10px 12px;font-weight:900;border-bottom:2px solid var(--line)}
+.bh svg{width:34px;height:34px;flex:none}
+.bh:focus-visible{outline:3px solid var(--yel)}
+.bin{display:flex;flex-wrap:wrap;gap:6px;padding:10px;flex:1;align-content:flex-start}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 12px;border-radius:12px;border:2px solid var(--line);background:#fff;cursor:grab;font-weight:800;font-size:15px}
+.chip svg{width:22px;height:22px;flex:none}
+.chip.sel{border-color:var(--blue);box-shadow:0 0 0 3px #2f7cf640}
+.chip.right{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.chip.wrong{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.chip.right::after{content:"✓"}.chip.wrong::after{content:"✗"}
+
+/* match */
+.match{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:10px 14px}
+@media(max-width:620px){.match{grid-template-columns:1fr}}
+.mcol{display:grid;gap:8px;align-content:start}
+.mi{text-align:left;min-height:50px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;font-weight:800;font-size:15px}
+.mi.l{font-size:17px;font-weight:900}
+.mi.sel{border-color:var(--blue);background:var(--soft)}
+.mi.right{border-color:var(--ok);background:var(--okbg);color:var(--ok);cursor:default}
+
+/* explorer */
+.exp{border:2px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+.exp-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;background:var(--soft);border-bottom:2px solid var(--line)}
+.exp-top .up{min-height:40px;padding:4px 12px;border-radius:10px;border:2px solid var(--line);background:#fff;cursor:pointer;font-weight:800}
+.crumbs{display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-weight:800;font-size:15px;background:#fff;border:2px solid var(--line);border-radius:10px;padding:4px 10px;flex:1}
+.crumbs button{all:unset;cursor:pointer;color:var(--blue-d);padding:2px 4px;border-radius:6px}
+.crumbs button:hover{background:var(--soft)}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px;padding:14px;min-height:180px}
+.it{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border-radius:12px;text-align:center;font-weight:800;font-size:14px;overflow-wrap:anywhere}
+.it:hover,.it:focus-visible{background:var(--soft)}
+.it svg{width:58px;height:58px}
+.it.found{background:var(--okbg)}
+.mission{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;margin-bottom:10px}
+.mission mark{background:var(--yel);padding:0 8px;border-radius:6px;color:var(--ink)}
+.path{font:800 15px ui-monospace,Menlo,Consolas,monospace;background:#f2f7ff;border:2px dashed #a9c8f2;border-radius:10px;padding:6px 10px;overflow-wrap:anywhere}
+
+/* share dialog */
+.share{max-width:620px;margin:0 auto;border-radius:20px;box-shadow:0 10px 30px #17325e26;border:2px solid var(--line);background:#fff;padding:18px}
+.share h4{margin:0 0 4px;font-size:20px;font-weight:900}
+.prow{display:grid;grid-template-columns:44px minmax(0,1fr) minmax(0,170px);gap:10px;align-items:center;padding:10px 0;border-top:2px solid #eef4fc}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px}
+.prow b{display:block}.prow small{color:var(--mute);font-size:14px;line-height:1.3;display:block}
+select{font:800 15px Nunito,system-ui,sans-serif;min-height:44px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink);padding:4px 8px;width:100%}
+.prow.right select{border-color:var(--ok);background:var(--okbg)}.prow.wrong select{border-color:var(--bad);background:var(--badbg)}
+.gacc{margin-top:8px;padding-top:12px;border-top:2px solid #eef4fc}
+@media(max-width:560px){.prow{grid-template-columns:44px minmax(0,1fr)}.prow select{grid-column:1/-1}}
+
+/* quiz */
+.q{padding:14px 0;border-top:2px dashed var(--line)}.q:first-child{border-top:0;padding-top:0}
+.qq{font-weight:800;margin:0 0 10px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media(max-width:620px){.opts{grid-template-columns:1fr}}
+.opt{text-align:left;min-height:48px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;cursor:pointer;font-weight:800;font-size:16px}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.opt.wrong{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.ex{font-size:15px}
+
+/* results */
+.result{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:center}
+@media(max-width:620px){.result{grid-template-columns:1fr}}
+.medal{width:170px;height:170px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;text-align:center;border:6px solid var(--yel);box-shadow:0 6px 0 #1a5fd1}
+.medal b{font-size:64px;line-height:1;display:block}
+.medal span{font-size:14px;font-weight:800}
+.rt{width:100%;border-collapse:collapse;margin-top:16px}
+.rt td,.rt th{padding:9px 6px;border-bottom:2px solid #eef4fc;text-align:left}
+.rt td.n{text-align:right;font-weight:900;white-space:nowrap}
+.rt th{font-size:13px;color:var(--mute)}
+.stars{font-size:32px;color:#f2b600;letter-spacing:3px}
+footer{text-align:center;color:var(--mute);font-size:14px;padding:20px 16px 40px}
+canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:99}
+.modal{position:fixed;inset:0;background:#17325e66;display:grid;place-items:center;z-index:100;padding:16px}
+.modal>div{background:#fff;border-radius:20px;padding:22px;max-width:420px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="race" role="region" aria-label="Прогрес уроку">
+ <div class="wrap">
+  <div class="track" aria-hidden="true"><div class="fill"></div><div class="runner" id="runner"></div>
+   <svg class="flag" viewBox="0 0 36 50"><rect x="3" y="2" width="3" height="46" rx="1.5" fill="#17325e"/><path d="M6 4h26l-6 8 6 8H6z" fill="#ffd34d" stroke="#17325e" stroke-width="2"/><path d="M12 4v16M19 4v16" stroke="#17325e" stroke-width="2" opacity=".35"/></svg></div>
+  <div class="rinfo" aria-live="polite"><b id="rDone">Пройдено 0 з 8</b><span id="rTime">Урок: 30 хвилин</span></div>
+ </div>
+</div>
+
+<header class="hero"><div class="wrap">
+ <div>
+  <span class="tag">Інформатика · 6 клас</span>
+  <h1>Файли, папки, <b>хмара</b> і хто має доступ</h1>
+  <p>Дізнаєшся, як комп’ютер зберігає файли, навіщо потрібні хмарні сервіси і як безпечно ділитися своїми документами.</p>
+  <div class="plan"><span>📖 Поняття ~7 хв</span><span>🧩 Вправи ~15 хв</span><span>✅ Тест ~8 хв</span></div>
+  <p><b>Обери, хто бігтиме твоєю доріжкою:</b></p>
+  <div class="pick" role="group" aria-label="Вибір персонажа">
+   <button type="button" data-r="hare" aria-pressed="false"><span class="pv" data-svg="hare"></span><span>Заєць<small>швидкий і спритний</small></span></button>
+   <button type="button" data-r="turtle" aria-pressed="false"><span class="pv" data-svg="turtle"></span><span>Черепаха<small>повільна, але уважна</small></span></button>
+  </div>
+ </div>
+ <svg class="hero-art" viewBox="0 0 440 340" role="img" aria-label="Хмара, з якої до планшета, ноутбука й телефона йдуть папки й файли">
+  <path d="M110 150a52 52 0 0 1 10-102 72 72 0 0 1 134-12 58 58 0 0 1 86 50 46 46 0 0 1-8 92H118z" fill="#2f7cf6"/>
+  <path d="M130 140a40 40 0 0 1 8-78 56 56 0 0 1 104-10 44 44 0 0 1 66 38 36 36 0 0 1-6 70H136z" fill="#5c9bff" opacity=".5"/>
+  <g transform="translate(160 70)"><path d="M0 12a6 6 0 0 1 6-6h24l8 8h34a6 6 0 0 1 6 6v40a6 6 0 0 1-6 6H6a6 6 0 0 1-6-6z" fill="#ffd34d"/><path d="M0 26h78v34a6 6 0 0 1-6 6H6a6 6 0 0 1-6-6z" fill="#ffe187"/></g>
+  <g transform="translate(250 80)"><rect width="44" height="56" rx="6" fill="#fff"/><path d="M10 16h24M10 26h24M10 36h16" stroke="#2f7cf6" stroke-width="4" stroke-linecap="round"/></g>
+  <g transform="translate(300 40)"><rect width="34" height="28" y="14" rx="6" fill="#17325e"/><path d="M7 14v-4a10 10 0 0 1 20 0v4" stroke="#17325e" stroke-width="5" fill="none"/><circle cx="17" cy="28" r="4" fill="#ffd34d"/></g>
+  <g stroke="#2f7cf6" stroke-width="4" stroke-dasharray="2 10" stroke-linecap="round"><path d="M140 190 90 250"/><path d="M220 190v50"/><path d="M300 190l50 60"/></g>
+  <g transform="translate(40 250)"><rect width="100" height="70" rx="8" fill="#17325e"/><rect x="7" y="7" width="86" height="56" rx="4" fill="#eaf3ff"/><circle cx="50" cy="35" r="14" fill="#2f7cf6"/></g>
+  <g transform="translate(166 242)"><rect width="110" height="70" rx="6" fill="#17325e"/><rect x="7" y="7" width="96" height="56" rx="3" fill="#eaf3ff"/><rect x="-12" y="70" width="134" height="10" rx="5" fill="#17325e"/><path d="M30 30h50M30 42h34" stroke="#2f7cf6" stroke-width="6" stroke-linecap="round"/></g>
+  <g transform="translate(320 246)"><rect width="50" height="84" rx="10" fill="#17325e"/><rect x="5" y="9" width="40" height="64" rx="4" fill="#eaf3ff"/><path d="M15 30h20M15 40h20M15 50h12" stroke="#2f7cf6" stroke-width="5" stroke-linecap="round"/></g>
+ </svg>
+</div></header>
+
+<main class="wrap">
+<section class="blk" id="ponyattya"><div class="shead"><span class="num">1</span><h2>Поняття коротко</h2><span class="time">~7 хв</span><p>Переверни кожну картку: спершу спробуй пояснити сам, а тоді перевір.</p></div>
+ <div class="card" id="task-cards"><div class="th"><h3>Картки-перевертні</h3><span class="pts" data-pts="cards"></span></div><div class="tb"></div></div>
+</section>
+<section class="blk" id="vpravy"><div class="shead"><span class="num">2</span><h2>Вправи</h2><span class="time">~15 хв</span><p>Шість вправ. Бали нараховуються за першу перевірку, а потренуватися можна ще раз.</p></div>
+ <div class="card" id="task-ext"><div class="th"><h3>Вправа 1. Розклади файли по папках</h3><span class="pts" data-pts="ext"></span></div><p class="lead">Подивись на <b>розширення</b> — частину імені після крапки — і поклади кожен файл у потрібну папку. Натисни файл, а потім папку (або перетягни).</p><div class="tb"></div></div>
+ <div class="card" id="task-exp"><div class="th"><h3>Вправа 2. Знайди файл у провіднику</h3><span class="pts" data-pts="exp"></span></div><p class="lead">Відкривай папки, щоб знайти потрібний файл. Стеж, як змінюється <b>шлях</b> угорі.</p><div class="tb"></div></div>
+ <div class="card" id="task-ops"><div class="th"><h3>Вправа 3. Що робимо з файлами?</h3><span class="pts" data-pts="ops"></span></div><p class="lead">З’єднай дію з тим, що відбувається з файлом. Клацни дію, а потім пояснення.</p><div class="tb"></div></div>
+ <div class="card" id="task-name"><div class="th"><h3>Вправа 4. Правильне чи неправильне ім’я файлу?</h3><span class="pts" data-pts="name"></span></div><p class="lead">У Windows в імені файлу не можна використовувати символи <b>\ / : * ? " &lt; &gt; |</b>. Знайди імена, які комп’ютер не прийме.</p><div class="tb"></div></div>
+ <div class="card" id="task-cloud"><div class="th"><h3>Вправа 5. Хмара: переваги й недоліки</h3><span class="pts" data-pts="cloud"></span></div><p class="lead">Подумай, що добре, а що погано, коли файли зберігаються в хмарі.</p><div class="tb"></div></div>
+ <div class="card" id="task-share"><div class="th"><h3>Вправа 6. Надай доступ до проєкту</h3><span class="pts" data-pts="share"></span></div><p class="lead">Ти власник презентації. Кожній людині обери <b>рівень доступу</b> — не більше, ніж їй справді потрібно.</p><div class="tb"></div></div>
+</section>
+<section class="blk" id="test"><div class="shead"><span class="num">3</span><h2>Підсумковий тест</h2><span class="time">~8 хв</span><p>10 запитань. Після кожної відповіді побачиш пояснення.</p></div>
+ <div class="card" id="task-test"><div class="th"><h3>Тест</h3><span class="pts" data-pts="test"></span></div><div class="tb"></div></div>
+</section>
+<section class="blk" id="rezultat"><div class="shead"><span class="num">★</span><h2>Результат</h2></div>
+ <div class="card" id="resCard"></div>
+</section>
+</main>
+<footer>Урок «Файлова система. Хмарні сервіси. Рівні доступу» · 6 клас</footer>
+<canvas id="cf" hidden></canvas>
+<div class="sr" aria-live="polite" id="live"></div>
+
+<script>
+{
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const h=html=>{const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstElementChild};
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+const live=m=>{const l=$('#live');l.textContent='';setTimeout(()=>{l.textContent=m},40)};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- pictures ---------- */
+const SVG={
+hare:'<svg viewBox="0 0 80 60" aria-hidden="true"><ellipse cx="22" cy="51" rx="11" ry="4" fill="#b7c3d6"/><ellipse cx="36" cy="38" rx="21" ry="13" fill="#d5dce8"/><circle cx="17" cy="33" r="6" fill="#fff" stroke="#c3ccda" stroke-width="2"/><ellipse cx="52" cy="10" rx="4" ry="12" transform="rotate(-12 52 10)" fill="#d5dce8"/><ellipse cx="52" cy="10" rx="1.8" ry="8" transform="rotate(-12 52 10)" fill="#f7b6c4"/><ellipse cx="60" cy="10" rx="4" ry="12" transform="rotate(14 60 10)" fill="#d5dce8"/><ellipse cx="60" cy="10" rx="1.8" ry="8" transform="rotate(14 60 10)" fill="#f7b6c4"/><circle cx="58" cy="28" r="11" fill="#d5dce8"/><circle cx="62" cy="25" r="2.2" fill="#17325e"/><circle cx="68.5" cy="30" r="2" fill="#f08aa1"/><ellipse cx="47" cy="50" rx="6" ry="3.5" fill="#b7c3d6"/></svg>',
+turtle:'<svg viewBox="0 0 80 60" aria-hidden="true"><ellipse cx="20" cy="47" rx="6" ry="5" fill="#86c27d"/><ellipse cx="50" cy="47" rx="6" ry="5" fill="#86c27d"/><path d="M8 42l-6 2 6 2z" fill="#86c27d"/><circle cx="66" cy="36" r="9" fill="#9ad08f"/><circle cx="69" cy="33" r="2" fill="#17325e"/><path d="M66 40q3 2 6 0" stroke="#17325e" stroke-width="1.5" fill="none"/><path d="M8 44a28 25 0 0 1 56 0z" fill="#4f9d5e"/><path d="M14 44a22 19 0 0 1 44 0" fill="#69b56f"/><path d="M36 22v22M22 30l7 14M50 30l-7 14M18 40h36" stroke="#3d7f4a" stroke-width="2.2" fill="none"/></svg>',
+folder:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M4 16a5 5 0 0 1 5-5h16l6 6h24a5 5 0 0 1 5 5v28a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" fill="#ffc83d"/><path d="M4 24h56v26a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" fill="#ffd96b"/></svg>',
+doc:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 4h26l12 12v42a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" fill="#2f7cf6"/><path d="M40 4l12 12H43a3 3 0 0 1-3-3z" fill="#9cc6ff"/><path d="M19 28h26M19 36h26M19 44h18" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg>',
+img:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="10" width="52" height="44" rx="6" fill="#19a974"/><circle cx="22" cy="24" r="6" fill="#ffd34d"/><path d="M6 46l16-14 12 10 8-6 16 14v4H6z" fill="#0f7a52"/></svg>',
+music:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="12" fill="#e0457b"/><path d="M26 44V20l18-4v24" stroke="#fff" stroke-width="4" fill="none"/><circle cx="22" cy="44" r="5" fill="#fff"/><circle cx="40" cy="40" r="5" fill="#fff"/></svg>',
+video:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="12" width="56" height="40" rx="8" fill="#7a4cf0"/><path d="M27 23v18l15-9z" fill="#fff"/></svg>',
+pres:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 4h26l12 12v42a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" fill="#f2711c"/><path d="M40 4l12 12H43a3 3 0 0 1-3-3z" fill="#ffc29b"/><rect x="18" y="26" width="28" height="20" rx="2" fill="#fff"/></svg>',
+sheet:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 4h26l12 12v42a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z" fill="#16a05c"/><path d="M40 4l12 12H43a3 3 0 0 1-3-3z" fill="#9be0b8"/><path d="M18 26h28v20H18zM18 36h28M32 26v20" stroke="#fff" stroke-width="3" fill="none"/></svg>',
+disk:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="18" width="52" height="30" rx="6" fill="#17325e"/><rect x="12" y="24" width="30" height="6" rx="3" fill="#5c9bff"/><circle cx="48" cy="38" r="3" fill="#19d27a"/></svg>',
+path:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="4" y="22" width="56" height="20" rx="10" fill="#eaf3ff" stroke="#2f7cf6" stroke-width="3"/><path d="M14 32h6M26 32h6M38 32h6" stroke="#2f7cf6" stroke-width="3" stroke-linecap="round"/><path d="M48 27l5 5-5 5" stroke="#2f7cf6" stroke-width="3" fill="none"/></svg>',
+bin:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="18" width="36" height="40" rx="5" fill="#5c9bff"/><rect x="10" y="10" width="44" height="8" rx="4" fill="#2f7cf6"/><rect x="26" y="5" width="12" height="6" rx="3" fill="#2f7cf6"/><path d="M24 28v20M32 28v20M40 28v20" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>',
+cloud:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 48a12 12 0 0 1 1-24 15 15 0 0 1 28-3 12 12 0 0 1 1 27z" fill="#2f7cf6"/><path d="M32 30v14M26 36l6-6 6 6" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>',
+sync:'<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="26" fill="#eaf3ff"/><path d="M18 30a14 14 0 0 1 25-8M46 34a14 14 0 0 1-25 8" stroke="#2f7cf6" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M44 14v9h-9M20 50v-9h9" stroke="#2f7cf6" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+owner:'<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="24" r="11" fill="#2f7cf6"/><path d="M12 56a20 18 0 0 1 40 0z" fill="#2f7cf6"/><path d="M22 10l5 5 5-8 5 8 5-5-2 10H24z" fill="#ffd34d"/></svg>',
+edit:'<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="40" height="48" rx="5" fill="#eaf3ff" stroke="#2f7cf6" stroke-width="3"/><path d="M16 20h22M16 28h22M16 36h12" stroke="#9cc6ff" stroke-width="3" stroke-linecap="round"/><path d="M50 18l6 6-22 22-8 2 2-8z" fill="#ffd34d" stroke="#17325e" stroke-width="2"/></svg>',
+comment:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 12h48a4 4 0 0 1 4 4v26a4 4 0 0 1-4 4H26l-12 10v-10H8a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z" fill="#2f7cf6"/><path d="M16 24h32M16 32h20" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>',
+view:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M4 32s10-18 28-18 28 18 28 18-10 18-28 18S4 32 4 32z" fill="#eaf3ff" stroke="#2f7cf6" stroke-width="3"/><circle cx="32" cy="32" r="10" fill="#2f7cf6"/><circle cx="35" cy="29" r="3" fill="#fff"/></svg>',
+link:'<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M28 36a10 10 0 0 0 14 0l8-8a10 10 0 0 0-14-14l-4 4" stroke="#2f7cf6" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M36 28a10 10 0 0 0-14 0l-8 8a10 10 0 0 0 14 14l4-4" stroke="#17325e" stroke-width="6" fill="none" stroke-linecap="round"/></svg>'};
+const ICON_EXT={docx:'doc',txt:'doc',jpg:'img',png:'img',mp3:'music',wav:'music',mp4:'video',avi:'video',pptx:'pres',xlsx:'sheet'};
+const fileIcon=n=>SVG[ICON_EXT[n.split('.').pop()]]||SVG.doc;
+$$('[data-svg]').forEach(e=>{e.innerHTML=SVG[e.dataset.svg]});
+
+/* ---------- state ---------- */
+const TASKS={cards:{t:'Картки-перевертні',max:0},ext:{t:'Розклади файли по папках',max:9},exp:{t:'Знайди файл у провіднику',max:3},ops:{t:'Що робимо з файлами',max:5},name:{t:'Правильне ім’я файлу',max:6},cloud:{t:'Хмара: переваги й недоліки',max:7},share:{t:'Надай доступ до проєкту',max:4},test:{t:'Підсумковий тест',max:10}};
+const KEY='fajly6-v1';let S={r:'',start:0,t:{}};
+try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(x&&x.t)S=x}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const IDS=Object.keys(TASKS);
+const doneN=()=>IDS.filter(k=>S.t[k]?.d).length;
+const total=()=>IDS.reduce((a,k)=>a+(S.t[k]?.d?S.t[k].s:0),0);
+const maxAll=IDS.reduce((a,k)=>a+TASKS[k].max,0);
+
+function refresh(){
+ IDS.forEach(id=>{const e=$(`[data-pts="${id}"]`);if(!e)return;const r=S.t[id],m=TASKS[id].max;e.textContent=m?(r?.d?`${r.s} / ${m} б.`:`0 / ${m} б.`):(r?.d?'✓ переглянуто':'без балів');e.classList.toggle('done',!!r?.d)});
+ const n=doneN(),pct=n/IDS.length*100;
+ $('.track .fill').style.width=pct+'%';const ru=$('#runner');ru.style.left=`calc(${pct}% - ${pct/100*62}px)`;
+ $('#rDone').textContent=n===IDS.length?'Фініш! 🏁':`Пройдено ${n} з ${IDS.length}`;
+ drawResult();
+}
+function setRunner(r){S.r=r;if(!S.start)S.start=Date.now();save();$('#runner').innerHTML=SVG[r];$$('.pick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.r===r));tick()}
+$$('.pick button').forEach(b=>b.onclick=()=>{setRunner(b.dataset.r);live(b.dataset.r==='hare'?'Твій бігун — заєць':'Твоя бігунка — черепаха');document.getElementById('ponyattya').scrollIntoView()});
+$('#runner').innerHTML=SVG[S.r||'hare'];if(S.r)setRunner(S.r);
+function tick(){if(!S.start){$('#rTime').textContent='Урок: 30 хвилин';return}const m=Math.floor((Date.now()-S.start)/60000);$('#rTime').textContent=doneN()===IDS.length?`Час: ${m} хв`:m<=30?`Минуло ${m} хв з 30`:`Минуло ${m} хв — фініш уже близько!`}
+setInterval(tick,20000);
+
+function award(id,s,pr){
+ if(pr){live(`Тренування: ${s} з ${TASKS[id].max}. Бали не змінено.`);return}
+ if(S.t[id]?.d)return;if(!S.start)S.start=Date.now();
+ S.t[id]={s,d:1};save();refresh();tick();
+ const ru=$('#runner');ru.classList.remove('hop');void ru.offsetWidth;ru.classList.add('hop');
+ live(TASKS[id].max?`Зараховано ${s} з ${TASKS[id].max} балів.`:'Картки переглянуто.');
+ if(doneN()===IDS.length){confetti();setTimeout(()=>$('#rezultat').scrollIntoView(),700)}
+}
+function finish(el,id,s,pr,mount){award(id,s,pr);const a=h(`<div class="act"><button class="btn" type="button">Потренуватися ще раз${pr?'':' (бали вже зараховано)'}</button></div>`);a.querySelector('button').onclick=()=>mount(true);el.append(a)}
+const fx=(ok,el)=>{if(!el||RM)return;el.classList.remove('pop','shake');void el.offsetWidth;el.classList.add(ok?'pop':'shake')};
+function mountTask(id,fn){const box=$(`#task-${id} .tb`);const mount=pr=>{box.innerHTML='';const c=document.createElement('div');box.append(c);fn(c,pr,mount)};
+ if(S.t[id]?.d&&TASKS[id].max){const d=h(`<div class="donep"><span>Виконано: ${S.t[id].s} з ${TASKS[id].max} б.</span><button class="btn" type="button">Потренуватися ще раз</button></div>`);d.querySelector('button').onclick=()=>mount(true);box.append(d)}else mount(false)}
+
+/* ---------- generic widgets ---------- */
+function sortW(id,cfg){return(el,pr,mount)=>{const items=shuffle(cfg.items.map((x,i)=>({...x,i})));let sel=null,locked=false;
+ el.innerHTML=`<div class="pool" role="group" aria-label="Нерозкладені картки">${items.map(x=>`<button class="chip" type="button" draggable="true" data-i="${x.i}">${cfg.icon?cfg.icon(x.t):''}${x.t}</button>`).join('')}</div><div class="buckets">${cfg.buckets.map(b=>`<div class="bucket" data-b="${b.k}"><button class="bh" type="button" aria-label="Покласти в: ${b.l}">${b.svg?SVG[b.svg]:''}${b.l}</button><div class="bin"></div></div>`).join('')}</div><div class="act"><button class="btn pri" type="button" data-check disabled>Перевірити</button><span class="hint">Натисни картку, а потім групу.</span></div><div class="fb" aria-live="polite"></div>`;
+ const pool=$('.pool',el),chk=$('[data-check]',el);
+ const upd=()=>{chk.disabled=locked||!!pool.querySelector('.chip')};
+ const place=(c,z)=>{if(locked)return;(z.classList.contains('pool')?z:$('.bin',z)).append(c);c.classList.remove('sel');sel=null;fx(true,c);upd()};
+ el.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c){if(locked)return;if(sel)sel.classList.remove('sel');sel=sel===c?null:c;if(sel){sel.classList.add('sel');live('Обрано: '+sel.textContent+'. Тепер обери групу.')}return}const z=e.target.closest('.bucket,.pool');if(z&&sel)place(sel,z)});
+ let dg=null;
+ el.addEventListener('dragstart',e=>{const c=e.target.closest('.chip');if(!c||locked){e.preventDefault();return}dg=c;e.dataTransfer.setData('text/plain','x')});
+ el.addEventListener('dragover',e=>{const z=e.target.closest('.bucket,.pool');if(z&&dg){e.preventDefault();z.classList.add('over')}});
+ el.addEventListener('dragleave',e=>{const z=e.target.closest('.bucket,.pool');if(z&&!z.contains(e.relatedTarget))z.classList.remove('over')});
+ el.addEventListener('drop',e=>{const z=e.target.closest('.bucket,.pool');if(z&&dg){e.preventDefault();z.classList.remove('over');place(dg,z);dg=null}});
+ chk.onclick=()=>{locked=true;upd();let ok=0;const wr=[];$$('.bucket',el).forEach(b=>$$('.chip',b).forEach(c=>{const x=cfg.items[+c.dataset.i],r=x.k===b.dataset.b;c.classList.add(r?'right':'wrong');c.draggable=false;if(r)ok++;else wr.push(x)}));
+  const L=k=>cfg.buckets.find(b=>b.k===k).l;
+  $('.fb',el).innerHTML=wr.length?`<div class="bad"><b>Правильно ${ok} з ${cfg.items.length}.</b> Помилки:<ul>${wr.map(x=>`<li><b>${x.t}</b> → ${L(x.k)}. ${x.e||''}</li>`).join('')}</ul></div>`:`<div class="good"><b>Чудово! ${ok} з ${cfg.items.length}.</b> ${cfg.win||''}</div>`;
+  finish(el,id,ok,pr,mount)}}}
+function matchW(id,pairs){return(el,pr,mount)=>{let sel=null,ok=0,got=0;const miss=new Set();
+ el.innerHTML=`<div class="match"><div class="mcol">${shuffle(pairs.map((p,i)=>i)).map(i=>`<button class="mi l" type="button" data-i="${i}">${pairs[i][0]}</button>`).join('')}</div><div class="mcol">${shuffle(pairs.map((p,i)=>i)).map(i=>`<button class="mi r" type="button" data-i="${i}">${pairs[i][1]}</button>`).join('')}</div></div><div class="fb" aria-live="polite"></div>`;
+ const fb=$('.fb',el);
+ el.addEventListener('click',e=>{const m=e.target.closest('.mi');if(!m||m.classList.contains('right'))return;
+  if(m.classList.contains('l')){$$('.mi.l',el).forEach(x=>x.classList.remove('sel'));sel=m;m.classList.add('sel');return}
+  if(!sel){fb.innerHTML='<div class="bad">Спершу клацни дію в лівій колонці.</div>';return}
+  const i=sel.dataset.i;
+  if(m.dataset.i===i){[sel,m].forEach(x=>{x.classList.remove('sel');x.classList.add('right')});if(!miss.has(i))ok++;got++;fx(true,m);fb.innerHTML=`<div class="good"><b>Так!</b> ${pairs[+i][2]||''}</div>`;sel=null;
+   if(!pr)$(`[data-pts="${id}"]`).textContent=`${ok} / ${pairs.length} б.`;if(got===pairs.length){fb.innerHTML+=`<div class="good"><b>Усі пари знайдено!</b> З першої спроби: ${ok} з ${pairs.length}.</div>`;finish(el,id,ok,pr,mount)}}
+  else{miss.add(i);fx(false,m);fb.innerHTML='<div class="bad">Не пасує. Спробуй інше пояснення.</div>'}})}}
+function quizW(id,items){return(el,pr,mount)=>{let ok=0,n=0;
+ el.innerHTML=items.map((x,i)=>`<div class="q" data-i="${i}"><p class="qq">${i+1}. ${x.q}</p><div class="opts">${x.o.map((o,j)=>`<button class="opt" type="button" data-j="${j}">${o}</button>`).join('')}</div><p class="ex" hidden aria-live="polite"></p></div>`).join('');
+ el.addEventListener('click',e=>{const b=e.target.closest('.opt');if(!b)return;const q=b.closest('.q');if(q.dataset.done)return;q.dataset.done=1;const x=items[+q.dataset.i],j=+b.dataset.j,r=j===x.a;n++;if(r)ok++;
+  $$('.opt',q).forEach((o,k)=>{o.disabled=true;if(k===x.a)o.classList.add('right');else if(k===j)o.classList.add('wrong')});
+  const ex=$('.ex',q);ex.hidden=false;ex.className='ex '+(r?'good':'bad');ex.innerHTML=`<b>${r?'Правильно!':'Не зовсім.'}</b> ${x.e}`;fx(r,b);
+  if(!pr)$(`[data-pts="${id}"]`).textContent=`${ok} / ${items.length} б.`;
+  if(n===items.length)finish(el,id,ok,pr,mount)})}}
+
+/* ---------- 1. flip cards ---------- */
+const CARDS=[
+ ['Файлова система',[['doc','Файл','<b>Файл</b> — це дані (текст, малюнок, музика), що мають ім’я і зберігаються на диску.'],['path','Ім’я і розширення','У файлу <b>вірш.docx</b> ім’я — «вірш», розширення — «docx». Розширення підказує, яка програма відкриє файл.'],['folder','Папка','<b>Папка</b> (каталог) — місце, де зберігаються файли та інші папки. Папки в папках утворюють <b>дерево</b>.'],['disk','Шлях до файлу','<b>Шлях</b> — «адреса» файлу: диск і всі папки до нього. Наприклад: <b>D:\\Навчання\\вірш.docx</b>'],['bin','Кошик','Видалений файл спершу потрапляє в <b>Кошик</b>. Звідти його можна відновити, поки Кошик не очищено.']]],
+ ['Хмарні сервіси',[['cloud','Хмарне сховище','Місце в інтернеті, де файли зберігаються на серверах. Приклади: <b>Google Диск, OneDrive, Dropbox, iCloud</b>.'],['sync','Синхронізація','Зміни у файлі автоматично з’являються на всіх твоїх пристроях: телефоні, планшеті, комп’ютері.']]],
+ ['Рівні доступу',[['owner','Власник','Створив файл. Може все: змінювати, видаляти, вирішувати, хто має доступ.'],['edit','Редактор','Може <b>змінювати</b> файл: писати, видаляти текст, додавати слайди.'],['comment','Коментатор','Може <b>переглядати</b> й залишати <b>коментарі</b>, але не змінює сам текст.'],['view','Читач','Може лише <b>переглядати</b> файл. Нічого не змінює.'],['link','Доступ за посиланням','Якщо відкрити доступ «усім, хто має посилання», файл побачить кожен, кому перешлють це посилання.']]]];
+mountTask('cards',el=>{const total=CARDS.reduce((a,g)=>a+g[1].length,0),seen=new Set();let k=0;
+ el.innerHTML=CARDS.map(([g,cs])=>`<p class="grp">${g}</p><div class="flips">${cs.map(c=>`<button class="fc" type="button" data-k="${k++}" aria-pressed="false" aria-label="${c[1]}. Натисни, щоб перевернути"><span class="fi"><span class="ff">${SVG[c[0]]}<b>${c[1]}</b><small>натисни, щоб перевернути</small></span><span class="fb"><span>${c[2]}</span></span></span></button>`).join('')}</div>`).join('')+'<p class="hint" aria-live="polite" style="margin-top:12px"></p>';
+ el.addEventListener('click',e=>{const c=e.target.closest('.fc');if(!c)return;const on=!c.classList.contains('on');c.classList.toggle('on',on);c.setAttribute('aria-pressed',on);if(on)live(c.querySelector('.fb').textContent);seen.add(c.dataset.k);$('.hint',el).textContent=`Переглянуто ${seen.size} з ${total}`;if(seen.size===total&&!S.t.cards?.d)award('cards',0,false)})});
+
+/* ---------- 2. exercises ---------- */
+mountTask('ext',sortW('ext',{icon:t=>fileIcon(t),buckets:[{k:'d',l:'Документи',svg:'folder'},{k:'i',l:'Зображення',svg:'folder'},{k:'m',l:'Музика',svg:'folder'},{k:'v',l:'Відео',svg:'folder'}],
+ items:[{t:'реферат.docx',k:'d',e:'.docx — текстовий документ.'},{t:'вірш.txt',k:'d',e:'.txt — простий текст.'},{t:'проєкт.pptx',k:'d',e:'.pptx — презентація, це теж документ.'},{t:'фото_класу.jpg',k:'i',e:'.jpg — фотографія.'},{t:'малюнок.png',k:'i',e:'.png — зображення.'},{t:'пісня.mp3',k:'m',e:'.mp3 — музика.'},{t:'дзвоник.wav',k:'m',e:'.wav — звуковий файл.'},{t:'мультфільм.mp4',k:'v',e:'.mp4 — відео.'},{t:'екскурсія.avi',k:'v',e:'.avi — відео.'}],win:'Ти добре розрізняєш розширення!'}));
+
+const FS={n:'D:',c:[{n:'Навчання',c:[{n:'Математика',c:[{n:'задачі.docx'},{n:'таблиця_множення.xlsx'}]},{n:'Українська література',c:[{n:'вірш.docx'},{n:'твір.docx'}]},{n:'Інформатика',c:[{n:'проєкт.pptx'},{n:'нотатки.txt'}]}]},{n:'Фото',c:[{n:'Екскурсія',c:[{n:'замок.jpg'},{n:'автобус.jpg'}]},{n:'Свята',c:[{n:'ялинка.png'}]}]},{n:'Музика',c:[{n:'пісня.mp3'},{n:'дзвоник.wav'}]}]};
+mountTask('exp',(el,pr,mount)=>{const GOALS=['вірш.docx','замок.jpg','проєкт.pptx'];let gi=0,path=[FS];const found=[];
+ el.innerHTML=`<p class="mission" aria-live="polite"></p><div class="exp"><div class="exp-top"><button class="up" type="button">⬆ Назад</button><nav class="crumbs" aria-label="Шлях"></nav></div><div class="items"></div></div><div class="fb" aria-live="polite"></div>`;
+ const draw=()=>{const cur=path[path.length-1];
+  $('.mission',el).innerHTML=gi<GOALS.length?`🔎 Знайди файл <mark>${GOALS[gi]}</mark> <span class="hint">(${gi+1} з 3)</span>`:'🎉 Усі три файли знайдено!';
+  $('.crumbs',el).innerHTML=path.map((p,i)=>`<button type="button" data-d="${i}">${p.n}</button>${i<path.length-1?'<span aria-hidden="true">\\</span>':''}`).join('');
+  $('.up',el).disabled=path.length===1;
+  $('.items',el).innerHTML=cur.c.map((x,i)=>`<button class="it${!x.c&&found.includes(x.n)?' found':''}" type="button" data-i="${i}" aria-label="${x.c?'Папка':'Файл'} ${x.n}">${x.c?SVG.folder:fileIcon(x.n)}<span>${x.n}</span></button>`).join('')};
+ draw();
+ el.addEventListener('click',e=>{const up=e.target.closest('.up');if(up){if(path.length>1){path.pop();draw()}return}
+  const cr=e.target.closest('[data-d]');if(cr){path=path.slice(0,+cr.dataset.d+1);draw();return}
+  const it=e.target.closest('.it');if(!it)return;const x=path[path.length-1].c[+it.dataset.i];
+  if(x.c){path.push(x);draw();$('.items .it',el)?.focus();return}
+  const fb=$('.fb',el),p=path.map(q=>q.n).join('\\')+'\\'+x.n;
+  if(gi<GOALS.length&&x.n===GOALS[gi]){found.push(x.n);gi++;fb.innerHTML=`<div class="good"><b>Знайдено!</b> Шлях до файлу:<div class="path">${p}</div></div>`;fx(true,it);if(!pr)$('[data-pts="exp"]').textContent=`${gi} / 3 б.`;
+   if(gi===GOALS.length){path=[FS];draw();fb.innerHTML+=`<div class="good"><b>Молодець!</b> Ти вмієш ходити деревом папок.</div>`;finish(el,'exp',3,pr,mount)}else draw()}
+  else if(gi<GOALS.length){fx(false,it);fb.innerHTML=`<div class="bad">Це файл «${x.n}». Шукаємо «${GOALS[gi]}» — подумай, у якій папці він може бути.</div>`}})});
+
+mountTask('ops',matchW('ops',[['Копіювати','Файл з’являється в новому місці і залишається в старому','Тепер у тебе дві однакові копії.'],['Перемістити','Файл зникає зі старого місця і з’являється в новому','Копія одна, змінилося лише місце.'],['Перейменувати','Змінюється ім’я файлу','Вміст файлу лишається тим самим.'],['Видалити','Файл потрапляє в Кошик','З Кошика його ще можна повернути.'],['Відновити','Файл повертається з Кошика на своє місце','Так рятують випадково видалені файли.']]));
+
+mountTask('name',sortW('name',{buckets:[{k:'ok',l:'✅ Правильне ім’я'},{k:'no',l:'⛔ Неправильне ім’я'}],
+ items:[{t:'домашка_6Б.docx',k:'ok',e:'Літери, цифри й підкреслення дозволені.'},{t:'Мій малюнок.png',k:'ok',e:'Пробіл у імені дозволено.'},{t:'звіт-2026.txt',k:'ok',e:'Дефіс і цифри дозволені.'},{t:'питання?.docx',k:'no',e:'Знак ? заборонений.'},{t:'клас 6/Б.pptx',k:'no',e:'Знак / заборонений — він розділяє папки в шляху.'},{t:'урок:1.txt',k:'no',e:'Двокрапка : заборонена.'}],win:'Ти знаєш, які символи комп’ютер не приймає.'}));
+
+mountTask('cloud',sortW('cloud',{buckets:[{k:'p',l:'👍 Переваги',svg:'cloud'},{k:'n',l:'👎 Недоліки',svg:'cloud'}],
+ items:[{t:'Файли доступні з будь-якого пристрою',k:'p',e:'Відкриєш і вдома, і в школі.'},{t:'Можна працювати разом з однокласниками',k:'p',e:'Спільна робота над одним документом.'},{t:'Файли не зникнуть, якщо зламається телефон',k:'p',e:'Копія зберігається на серверах.'},{t:'Зміни зберігаються автоматично',k:'p',e:'Синхронізація робить це сама.'},{t:'Без інтернету файли можуть бути недоступні',k:'n',e:'Хмарі потрібне з’єднання.'},{t:'Безкоштовного місця небагато',k:'n',e:'Більше місця зазвичай платне.'},{t:'Хто дізнається пароль, той побачить файли',k:'n',e:'Тому пароль має бути надійним і секретним.'}],win:'Ти бачиш і плюси, і мінуси хмари.'}));
+
+mountTask('share',(el,pr,mount)=>{const P=[{n:'Оксана',d:'однокласниця, ви разом робите слайди',a:'ed',c:'#e0457b',w:'Оксані треба змінювати слайди — їй потрібен Редактор.'},{n:'Ольга Іванівна',d:'вчителька, перевіряє і пише зауваження',a:'cm',c:'#16a05c',w:'Вчителька пише зауваження, але не змінює вашу роботу — Коментатор.'},{n:'Бабуся',d:'хоче просто подивитися презентацію',a:'rd',c:'#f2711c',w:'Бабуся лише дивиться — їй вистачить рівня Читач.'}];
+ const OPT='<option value="">Обери рівень…</option><option value="rd">Читач</option><option value="cm">Коментатор</option><option value="ed">Редактор</option>';
+ el.innerHTML=`<div class="share" role="group" aria-label="Вікно «Надати доступ»"><h4>Надати доступ: «Проєкт_6Б.pptx»</h4><p class="hint">Власник: ти</p>${P.map((p,i)=>`<div class="prow" data-i="${i}"><span class="av" style="background:${p.c}" aria-hidden="true">${p.n[0]}</span><span><b>${p.n}</b><small>${p.d}</small></span><select aria-label="Рівень доступу для: ${p.n}">${OPT}</select></div>`).join('')}
+ <div class="gacc prow" data-g><span class="av" style="background:#2f7cf6" aria-hidden="true">🔗</span><span><b>Загальний доступ</b><small>Хто ще може відкрити файл за посиланням?</small></span><select aria-label="Загальний доступ"><option value="">Обери…</option><option value="lim">Обмежений — лише додані люди</option><option value="all-ed">Усі, хто має посилання — Редактор</option></select></div>
+ <div class="act"><button class="btn pri" type="button" data-check disabled>Готово</button></div></div><div class="fb" aria-live="polite"></div>`;
+ const sels=$$('select',el),btn=$('[data-check]',el);
+ el.addEventListener('change',()=>{btn.disabled=sels.some(s=>!s.value)});
+ btn.onclick=()=>{btn.disabled=true;sels.forEach(s=>s.disabled=true);let ok=0;const wr=[];
+  $$('.prow[data-i]',el).forEach(r=>{const p=P[+r.dataset.i],v=$('select',r).value,g=v===p.a;r.classList.add(g?'right':'wrong');if(g)ok++;else wr.push(p.w)});
+  const gr=$('[data-g]',el),gv=$('select',gr).value==='lim';gr.classList.add(gv?'right':'wrong');if(gv)ok++;else wr.push('Якщо дати редагування всім, хто має посилання, будь-хто може зіпсувати чи видалити вашу роботу. Обирай обмежений доступ.');
+  $('.fb',el).innerHTML=wr.length?`<div class="bad"><b>Правильно ${ok} з 4.</b><ul>${wr.map(w=>`<li>${w}</li>`).join('')}</ul></div>`:'<div class="good"><b>Ідеально! 4 з 4.</b> Ти даєш кожному рівно стільки доступу, скільки потрібно, — так безпечно.</div>';
+  finish(el,'share',ok,pr,mount)}});
+
+/* ---------- 3. test ---------- */
+mountTask('test',quizW('test',[
+ {q:'Яка частина імені файлу <b>казка.docx</b> — розширення?',o:['казка','docx','.','казка.docx'],a:1,e:'Розширення стоїть після крапки. Воно показує тип файлу.'},
+ {q:'Який файл найімовірніше є фотографією?',o:['море.mp3','море.jpg','море.docx','море.mp4'],a:1,e:'.jpg — розширення зображень і фото.'},
+ {q:'Шлях: <b>D:\\Навчання\\Інформатика\\проєкт.pptx</b>. У якій папці лежить файл?',o:['D:','Навчання','Інформатика','проєкт'],a:2,e:'Файл лежить в останній папці перед його ім’ям — «Інформатика».'},
+ {q:'Яке ім’я файлу комп’ютер з Windows <b>не прийме</b>?',o:['план_уроку.docx','мій:план.docx','План 2.docx','plan-6.docx'],a:1,e:'Двокрапка : заборонена в іменах файлів.'},
+ {q:'Куди спершу потрапляє видалений з комп’ютера файл?',o:['У хмару','У Кошик','Зникає назавжди','На флешку'],a:1,e:'З Кошика файл можна відновити.'},
+ {q:'Чим копіювання відрізняється від переміщення?',o:['Нічим','Після копіювання файл лишається і на старому місці','Після копіювання файл видаляється','Копіювання змінює ім’я'],a:1,e:'Копіювання створює ще одну копію, а переміщення просто змінює місце.'},
+ {q:'Що з переліченого — хмарний сервіс для зберігання файлів?',o:['Google Диск','Калькулятор','Кошик','Блокнот'],a:0,e:'Google Диск, OneDrive, Dropbox, iCloud — хмарні сховища.'},
+ {q:'Що найчастіше потрібно, щоб відкрити файл із хмари?',o:['Принтер','Інтернет','Мікрофон','Новий комп’ютер'],a:1,e:'Хмара працює через інтернет.'},
+ {q:'Друг має лише <b>переглядати</b> твій твір, нічого не змінюючи. Який рівень доступу дати?',o:['Редактор','Коментатор','Читач','Власник'],a:2,e:'Читач тільки переглядає файл.'},
+ {q:'Хто може видалити файл і вирішувати, кому дати доступ?',o:['Читач','Коментатор','Власник','Будь-хто з посиланням'],a:2,e:'Усе це може власник — той, хто створив файл.'}]));
+
+/* ---------- results ---------- */
+function drawResult(){const box=$('#resCard');const tot=total(),pct=maxAll?tot/maxAll*100:0,mark=Math.max(1,Math.round(pct/100*12)),all=doneN()===IDS.length;
+ const st=Math.round(pct/20);const m=S.start?Math.max(1,Math.round((Date.now()-S.start)/60000)):0;
+ box.innerHTML=`<div class="result"><div class="medal" aria-label="Оцінка ${all?mark:'—'}"><div><b>${all?mark:'?'}</b><span>${all?'балів із 12':'ще не фініш'}</span></div></div>
+ <div><h3>${!all?'Пройди всі завдання, щоб дізнатися оцінку':mark>=10?'Блискуче! Ти справжній знавець файлів!':mark>=7?'Добре! Ще трішки — і буде відмінно.':mark>=4?'Непогано, але варто повторити поняття.':'Переглянь картки і спробуй ще раз.'}</h3>
+ <p class="stars" aria-label="${st} з 5 зірок">${'★'.repeat(st)}${'☆'.repeat(5-st)}</p>
+ <p>Набрано <b>${tot} з ${maxAll}</b> балів (${Math.round(pct)}%).${all&&m?` Час: <b>${m} хв</b> — ${S.r==='turtle'?'черепаха':'заєць'} ${m<=30?'вклалася':'трохи не вклалася'} в урок!`.replace('заєць вклалася','заєць вклався').replace('заєць трохи не вклалася','заєць трохи не вклався'):''}</p></div></div>
+ <table class="rt"><thead><tr><th>Завдання</th><th style="text-align:right">Бали</th></tr></thead><tbody>${IDS.filter(k=>TASKS[k].max).map(k=>`<tr><td>${TASKS[k].t}</td><td class="n">${S.t[k]?.d?S.t[k].s:'—'} / ${TASKS[k].max}</td></tr>`).join('')}</tbody></table>
+ <div class="act"><button class="btn" type="button" id="again">Почати урок спочатку</button></div>`;
+ $('#again').onclick=()=>{const md=h(`<div class="modal" role="dialog" aria-modal="true" aria-label="Почати спочатку"><div><h3>Почати спочатку?</h3><p>Усі бали буде скинуто.</p><div class="act"><button class="btn pri" type="button" data-y>Так</button><button class="btn" type="button" data-n>Ні</button></div></div></div>`);document.body.append(md);$('[data-n]',md).focus();
+  md.addEventListener('click',e=>{if(e.target.closest('[data-y]')){S={r:'',start:0,t:{}};save();scrollTo(0,0);location.reload()}if(e.target.closest('[data-n]')||e.target===md)md.remove()})}}
+
+/* ---------- confetti ---------- */
+function confetti(){if(RM)return;const c=$('#cf'),x=c.getContext('2d');c.hidden=false;c.width=innerWidth;c.height=innerHeight;const cl=['#2f7cf6','#ffd34d','#5c9bff','#19a974','#e0457b'];
+ const P=Array.from({length:140},()=>({x:innerWidth/2+(Math.random()-.5)*240,y:innerHeight/3,vx:(Math.random()-.5)*14,vy:-Math.random()*12-4,s:6+Math.random()*6,c:cl[Math.random()*5|0],r:Math.random()*6}));let t=0;
+ const f=()=>{x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.2;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});if(++t<110)requestAnimationFrame(f);else c.hidden=true};f()}
+
+refresh();tick();
+}
+</script>
+</body>
+</html>
